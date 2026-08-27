@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=400, initial-scale=1.0">
+  <title>Bundle</title>
+  <link rel="stylesheet" href="popup.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div id="app">
+    <!-- Header -->
+    <header id="header">
+      <div class="header-left">
+        <div class="header-logo-wrap">
+          <img src="../assets/icons/bundle-logo.svg" class="header-logo" alt="Bundle" width="22" height="22" />
+        </div>
+        <h1 class="header-title">Bundle</h1>
+      </div>
+      <button id="btn-add" class="btn-icon" title="New collection">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 2v12M2 8h12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+      </button>
+    </header>
+
+    <!-- Mascot area -->
+    <div id="mascot-container">
+      <div id="mascot-glow"></div>
+      <object id="mascot-svg" type="image/svg+xml"
+              data="../assets/mascot/animations/idle.svg"
+              width="180" height="180"
+              aria-label="Bundle mascot"></object>
+      <p id="mascot-label">Ready to go!</p>
+    </div>
+
+    <!-- Collections list -->
+    <div id="collections-area">
+      <div id="collections-list"></div>
+      <!-- Empty state -->
+      <div id="empty-state" style="display:none">
+        <p class="empty-title">No collections yet</p>
+        <p class="empty-sub">Create one to get started!</p>
+        <button id="btn-empty-add" class="btn-primary">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M8 2v12M2 8h12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+          New Collection
+        </button>
+      </div>
+    </div>
+
+    <!-- New / Edit collection form (hidden by default) -->
+    <div id="form-overlay" class="overlay" style="display:none">
+      <div class="form-card">
+        <h2 id="form-title">New Collection</h2>
+        <label class="form-label">
+          Name
+          <input id="input-name" type="text" placeholder="e.g. Design Research" maxlength="40" autocomplete="off" />
+        </label>
+        <label class="form-label">
+          Emoji
+          <input id="input-emoji" type="text" placeholder="📦" maxlength="2" autocomplete="off" />
+        </label>
+        <label class="form-label">
+          URLs / Searches <span class="form-hint">(one per line)</span>
+          <textarea id="input-urls" rows="5" placeholder="https://pinterest.com&#10;shadcn ui components&#10;https://dribbble.com"></textarea>
+        </label>
+        <div class="form-actions">
+          <button id="btn-cancel" class="btn-secondary">Cancel</button>
+          <button id="btn-save" class="btn-primary">Save</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="../lib/state-machine.js"></script>
+  <script src="popup.js"></script>
+</body>
+</html>

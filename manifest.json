@@ -1,0 +1,26 @@
+{
+  "manifest_version": 3,
+  "name": "Bundle",
+  "version": "1.0.0",
+  "description": "One click opens your curated collection of tabs and searches. Powered by a reactive mascot.",
+  "permissions": ["tabs", "storage"],
+  "action": {
+    "default_popup": "popup/popup.html",
+    "default_icon": {
+      "16": "assets/icons/icon-16.png",
+      "32": "assets/icons/icon-32.png",
+      "48": "assets/icons/icon-48.png",
+      "128": "assets/icons/icon-128.png"
+    },
+    "default_title": "Bundle — Open your collection"
+  },
+  "icons": {
+    "16": "assets/icons/icon-16.png",
+    "32": "assets/icons/icon-32.png",
+    "48": "assets/icons/icon-48.png",
+    "128": "assets/icons/icon-128.png"
+  },
+  "background": {
+    "service_worker": "background.js"
+  }
+}

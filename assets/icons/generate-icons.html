@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+<head><title>Icon Generator</title></head>
+<body>
+<canvas id="c"></canvas>
+<script>
+// Generate extension icons as downloadable PNGs
+[16,32,48,128].forEach(size => {
+  const c = document.createElement('canvas');
+  c.width = c.height = size;
+  const ctx = c.getContext('2d');
+  
+  // Background circle
+  const cx = size/2, cy = size/2, r = size*0.42;
+  
+  // Gradient fill
+  const grad = ctx.createRadialGradient(cx*0.8, cy*0.7, 0, cx, cy, r);
+  grad.addColorStop(0, '#D93030');
+  grad.addColorStop(1, '#AD2222');
+  
+  // Draw hexagon-ish blob
+  ctx.beginPath();
+  const samples = 64;
+  const hex = [0.921,0.928,0.944,0.971,0.998,1.006,0.990,0.956,0.929,0.912,0.905,0.906,0.916,0.935,0.964,0.987,0.988,0.967,0.934,0.911,0.897,0.892,0.896,0.908,0.929,0.961,0.982,0.981,0.959,0.928,0.909,0.898,0.896,0.903,0.919,0.944,0.978,0.999,0.996,0.971,0.944,0.927,0.920,0.921,0.931,0.950,0.980,1.012,1.023,1.007,0.975,0.951,0.937,0.932,0.935,0.949,0.971,1.003,1.021,1.016,0.986,0.955,0.935,0.923];
+  for (let i = 0; i <= samples; i++) {
+    const angle = (i / samples) * Math.PI * 2;
+    const rv = hex[i % samples] * r;
+    const x = cx + Math.cos(angle) * rv;
+    const y = cy + Math.sin(angle) * rv;
+    if (i === 0) ctx.moveTo(x, y);
+    else ctx.lineTo(x, y);
+  }
+  ctx.closePath();
+  ctx.fillStyle = grad;
+  ctx.fill();
+  
+  // Eyes
+  if (size >= 32) {
+    ctx.fillStyle = '#fff';
+    const eyeW = size * 0.08, eyeH = size * 0.11;
+    const eyeSpacing = size * 0.1;
+    ctx.beginPath();
+    ctx.ellipse(cx - eyeSpacing, cy - size*0.02, eyeW, eyeH, 0, 0, Math.PI*2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.ellipse(cx + eyeSpacing, cy - size*0.02, eyeW, eyeH, 0, 0, Math.PI*2);
+    ctx.fill();
+  }
+  
+  // Download
+  const a = document.createElement('a');
+  a.download = `icon-${size}.png`;
+  a.href = c.toDataURL('image/png');
+  a.click();
+});
+document.body.innerHTML = '<h1>Icons downloaded! You can close this tab.</h1>';
+</script>
+</body>
+</html>
