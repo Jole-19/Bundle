@@ -6,21 +6,27 @@
   <title>Bundle</title>
   <link rel="stylesheet" href="popup.css">
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 </head>
 <body>
   <div id="app">
     <!-- Header -->
     <header id="header">
+      <div class="header-stripe"></div>
       <div class="header-left">
-        <div class="header-logo-wrap">
-          <img src="../assets/icons/bundle-logo.svg" class="header-logo" alt="Bundle" width="22" height="22" />
+        <div class="header-brand">
+          <h1 class="header-title">Bundle</h1>
         </div>
-        <h1 class="header-title">Bundle</h1>
       </div>
-      <button id="btn-add" class="btn-icon" title="New collection">
-        <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 2v12M2 8h12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-      </button>
+      <div class="header-actions">
+        <button id="btn-popout" class="btn-icon" title="Open in standalone window">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#icon-external"></use></svg>
+        </button>
+        <button id="btn-add" class="btn-icon btn-add-main" title="New collection">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M8 2v12M2 8h12" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>
+        </button>
+      </div>
     </header>
 
     <!-- Mascot area -->
@@ -50,26 +56,80 @@
     <!-- New / Edit collection form (hidden by default) -->
     <div id="form-overlay" class="overlay" style="display:none">
       <div class="form-card">
-        <h2 id="form-title">New Collection</h2>
+        <div class="form-header">
+          <h2 id="form-title">New Collection</h2>
+          <div class="form-mascot-wrap">
+            <object id="form-mascot-svg" type="image/svg+xml"
+                    data="../assets/mascot/animations/idle.svg"
+                    width="44" height="44"
+                    aria-label="Modal mascot mini"></object>
+          </div>
+        </div>
         <label class="form-label">
           Name
           <input id="input-name" type="text" placeholder="e.g. Design Research" maxlength="40" autocomplete="off" />
         </label>
-        <label class="form-label">
-          Emoji
-          <input id="input-emoji" type="text" placeholder="📦" maxlength="2" autocomplete="off" />
-        </label>
-        <label class="form-label">
-          URLs / Searches <span class="form-hint">(one per line)</span>
-          <textarea id="input-urls" rows="5" placeholder="https://pinterest.com&#10;shadcn ui components&#10;https://dribbble.com"></textarea>
-        </label>
+        <div class="form-label">
+          <div class="icon-header-row" id="toggle-icon-picker">
+            <div class="icon-header-left">
+              <span>Icon</span>
+              <div id="icon-selected-preview" class="icon-selected-badge" title="Current icon">
+                <svg id="selected-icon-svg" viewBox="0 0 24 24"><use href="#icon-package"></use></svg>
+              </div>
+            </div>
+            <button type="button" class="btn-toggle-icons" id="btn-toggle-icons">
+              <span id="toggle-icon-text">More Icons</span>
+              <svg class="chevron-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+            </button>
+          </div>
+          <div id="icon-picker" class="icon-picker-grid collapsed"></div>
+          <input type="hidden" id="input-icon" value="package" />
+        </div>
+        <div class="form-label">
+          <div class="url-header">
+            <div class="url-title-wrap">
+              <span>URLs / Searches</span>
+              <span class="form-hint">(one per line)</span>
+            </div>
+            <div class="url-helpers">
+              <button type="button" id="btn-add-select-tabs" class="btn-quick-tag" title="Select specific open tabs to add">
+                + Select Tabs
+              </button>
+              <button type="button" id="btn-add-all-tabs" class="btn-quick-tag" title="Add all open browser tabs in window">
+                + All Tabs
+              </button>
+            </div>
+          </div>
+          <textarea id="input-urls" rows="4" placeholder="https://pinterest.com&#10;shadcn ui components&#10;https://dribbble.com"></textarea>
+        </div>
         <div class="form-actions">
           <button id="btn-cancel" class="btn-secondary">Cancel</button>
           <button id="btn-save" class="btn-primary">Save</button>
         </div>
       </div>
     </div>
+
+    <!-- Tab Picker Modal Overlay -->
+    <div id="tab-picker-overlay" class="overlay" style="display:none; z-index: 110;">
+      <div class="form-card tab-picker-card">
+        <div class="form-header">
+          <h2>Select Open Tabs</h2>
+          <button type="button" id="btn-toggle-select-all" class="btn-quick-tag">Select All</button>
+        </div>
+        <div id="tab-picker-list" class="tab-picker-list">
+          <!-- Dynamically populated tab items -->
+        </div>
+        <div class="form-actions" style="margin-top: 16px;">
+          <button type="button" id="btn-tab-picker-cancel" class="btn-secondary">Cancel</button>
+          <button type="button" id="btn-tab-picker-confirm" class="btn-primary">+ Add Selected</button>
+        </div>
+      </div>
+    </div>
   </div>
+  </div>
+
+  <!-- SVG Sprite sheet -->
+  <div id="svg-sprite-container" style="display:none"></div>
 
   <script src="../lib/state-machine.js"></script>
   <script src="popup.js"></script>
