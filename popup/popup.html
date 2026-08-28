@@ -10,6 +10,20 @@
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 </head>
 <body>
+  <!-- Intro Splash Overlay -->
+  <div id="intro-splash" class="intro-splash-overlay">
+    <div class="splash-glow"></div>
+    <div class="splash-content">
+      <div class="splash-mascot-wrap" id="splash-mascot-wrap">
+        <object id="splash-mascot-svg" type="image/svg+xml"
+                data="../assets/mascot/animations/idle.svg"
+                width="110" height="110"
+                aria-label="Splash Mascot"></object>
+      </div>
+      <h1 id="splash-title" class="splash-title">Bundle</h1>
+    </div>
+  </div>
+
   <div id="app">
     <!-- Header -->
     <header id="header">
@@ -114,14 +128,32 @@
       <div class="form-card tab-picker-card">
         <div class="form-header">
           <h2>Select Open Tabs</h2>
-          <button type="button" id="btn-toggle-select-all" class="btn-quick-tag">Select All</button>
+          <button type="button" id="btn-toggle-select-all" class="btn-deselect-pill">Deselect All</button>
         </div>
         <div id="tab-picker-list" class="tab-picker-list">
           <!-- Dynamically populated tab items -->
         </div>
-        <div class="form-actions" style="margin-top: 16px;">
-          <button type="button" id="btn-tab-picker-cancel" class="btn-secondary">Cancel</button>
-          <button type="button" id="btn-tab-picker-confirm" class="btn-primary">+ Add Selected</button>
+        <div class="form-actions tab-picker-actions">
+          <button type="button" id="btn-tab-picker-cancel" class="btn-cancel-gold">Cancel</button>
+          <button type="button" id="btn-tab-picker-confirm" class="btn-add-selected">+ Add Selected</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Delete Confirmation Modal Overlay -->
+    <div id="delete-confirm-overlay" class="overlay" style="display:none; z-index: 120;">
+      <div class="delete-confirm-card">
+        <div class="delete-mascot-wrap">
+          <object id="delete-mascot-svg" type="image/svg+xml"
+                  data="../assets/mascot/animations/sad.svg"
+                  width="70" height="70"
+                  aria-label="Sad Mascot"></object>
+        </div>
+        <h2 class="delete-modal-title">Delete Collection?</h2>
+        <p class="delete-modal-desc">Are you sure you want to delete <strong id="delete-target-name">"Collection"</strong>? This action cannot be undone.</p>
+        <div class="form-actions delete-actions">
+          <button type="button" id="btn-delete-cancel" class="btn-cancel-gold">Cancel</button>
+          <button type="button" id="btn-delete-confirm" class="btn-delete-danger">Delete</button>
         </div>
       </div>
     </div>

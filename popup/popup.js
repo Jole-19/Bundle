@@ -9,8 +9,8 @@ const AVAILABLE_ICONS = [
   'database', 'chip', 'cloud', 'shield', 'fire', 'mail', 'target', 'calendar',
   'search', 'settings', 'layers', 'layout', 'image', 'key', 'lock', 'tag',
   'writing', 'headphones', 'film', 'pin', 'flag', 'trophy', 'gift', 'sun',
-  'package', 'folder', 'star', 'heart', 'bookmark', 'code', 
-  'palette', 'globe', 'music', 'camera', 'book', 'bolt', 
+  'package', 'folder', 'star', 'heart', 'bookmark', 'code',
+  'palette', 'globe', 'music', 'camera', 'book', 'bolt',
   'bag', 'gamepad', 'coffee', 'link'
 ];
 
@@ -124,8 +124,7 @@ async function restoreDraft() {
       $('#input-urls').value = draft.urls || '';
       renderIconPicker(draft.icon || 'package');
       $('#form-overlay').style.display = '';
-      sm.onUserTyping();
-      setTimeout(() => sm.onUserStoppedTyping(), 1000);
+      sm.onFormOpen();
     }
   } catch (err) {
     console.error('Failed to restore draft:', err);
@@ -254,7 +253,7 @@ function renderCollections() {
   list.querySelectorAll('.btn-action.delete').forEach(btn => {
     btn.addEventListener('click', (e) => {
       e.stopPropagation();
-      deleteCollection(parseInt(btn.dataset.index));
+      requestDeleteCollection(parseInt(btn.dataset.index));
     });
   });
 }
@@ -299,8 +298,38 @@ async function openCollection(index, cardEl) {
   }, 400);
 }
 
-// ─── Delete collection ───────────────────────────────────────────────
-async function deleteCollection(index) {
+// ─── Delete collection modal ─────────────────────────────────────────
+let pendingDeleteIndex = null;
+
+function requestDeleteCollection(index) {
+  pendingDeleteIndex = index;
+  const col = collections[index];
+  if (!col) return;
+
+  const nameEl = $('#delete-target-name');
+  if (nameEl) nameEl.textContent = `"${col.name}"`;
+
+  const overlay = $('#delete-confirm-overlay');
+  if (overlay) overlay.style.display = '';
+
+  sm.transition(MASCOT_STATES.SAD);
+}
+
+function closeDeleteConfirmModal() {
+  const overlay = $('#delete-confirm-overlay');
+  if (overlay) overlay.style.display = 'none';
+  pendingDeleteIndex = null;
+  sm.onPopupOpen(collections.length > 0);
+}
+
+async function confirmDeleteCollection() {
+  if (pendingDeleteIndex === null) return;
+  const index = pendingDeleteIndex;
+
+  const overlay = $('#delete-confirm-overlay');
+  if (overlay) overlay.style.display = 'none';
+  pendingDeleteIndex = null;
+
   collections.splice(index, 1);
   await saveCollections();
   sm.onCollectionDeleted();
@@ -318,6 +347,7 @@ function openNewForm() {
   $('#form-overlay').style.display = '';
   $('#input-name').focus();
   saveDraft();
+  sm.onFormOpen();
 }
 
 function openEditForm(index) {
@@ -331,12 +361,14 @@ function openEditForm(index) {
   $('#form-overlay').style.display = '';
   $('#input-name').focus();
   saveDraft();
+  sm.onFormOpen();
 }
 
 async function closeForm() {
   $('#form-overlay').style.display = 'none';
   editingId = null;
   await clearDraft();
+  sm.stopFormLoop();
   sm.onUserStoppedTyping();
 }
 
@@ -394,6 +426,7 @@ async function openTabPicker() {
   const overlay = $('#tab-picker-overlay');
   if (!overlay) return;
 
+  sm.transition(MASCOT_STATES.THINKING);
   selectedTabUrls.clear();
 
   try {
@@ -401,12 +434,13 @@ async function openTabPicker() {
       const tabs = await chrome.tabs.query({ lastFocusedWindow: true });
       openTabsList = tabs.filter(t => t.url && /^https?:\/\//i.test(t.url));
     } else {
-      // Mock tabs for testing outside chrome extension context
+      // Mock tabs for testing outside chrome extension context (matching Image 1)
       openTabsList = [
-        { id: 1, title: 'Dribbble - Discover Top Designs', url: 'https://dribbble.com/search/white-websites', favIconUrl: 'https://dribbble.com/favicon.ico' },
-        { id: 2, title: 'Pinterest - Visual Discovery Engine', url: 'https://pinterest.com', favIconUrl: 'https://pinterest.com/favicon.ico' },
-        { id: 3, title: 'shadcn/ui - Beautifully Designed Components', url: 'https://ui.shadcn.com', favIconUrl: 'https://ui.shadcn.com/favicon.ico' },
-        { id: 4, title: 'GitHub: Where the world builds software', url: 'https://github.com', favIconUrl: 'https://github.com/favicon.ico' }
+        { id: 1, title: 'Multi-link chrome extension with custom...', url: 'https://claude.ai/chat/4df03d4a-c158-4270-83...', favIconUrl: 'https://claude.ai/favicon.ico' },
+        { id: 2, title: 'localhost', url: 'http://localhost:5190/#etat=idle', favIconUrl: '' },
+        { id: 3, title: 'These UI libraries + AI = beautiful looking ...', url: 'https://www.youtube.com/watch?v=hglonrdRTS...', favIconUrl: 'https://www.youtube.com/s/desktop/f27ef640/img/favicon.ico' },
+        { id: 4, title: 'Variables and Operators | The Odin Proje...', url: 'https://www.theodinproject.com/lessons/found...', favIconUrl: 'https://www.theodinproject.com/favicon.ico' },
+        { id: 5, title: 'As a designer, how to convert design to l...', url: 'https://www.youtube.com/watch?v=design_to_code', favIconUrl: 'https://www.youtube.com/s/desktop/f27ef640/img/favicon.ico' }
       ];
     }
   } catch (err) {
@@ -414,8 +448,8 @@ async function openTabPicker() {
     openTabsList = [];
   }
 
-  // Pre-select all tabs by default
-  openTabsList.forEach(t => selectedTabUrls.add(t.url));
+  // Leave tabs unselected by default
+  selectedTabUrls.clear();
 
   renderTabPickerList();
   overlay.style.display = '';
@@ -444,11 +478,18 @@ function renderTabPickerList() {
   container.innerHTML = openTabsList.map(t => {
     const isChecked = selectedTabUrls.has(t.url);
     const favicon = t.favIconUrl || '';
-    
+
     return `
       <div class="tab-item-row ${isChecked ? 'selected' : ''}" data-url="${escapeHtml(t.url)}">
-        <input type="checkbox" class="tab-checkbox" ${isChecked ? 'checked' : ''} />
-        ${favicon ? `<img class="tab-favicon" src="${escapeHtml(favicon)}" onerror="this.style.display='none'" />` : ''}
+        <div class="custom-tab-checkbox ${isChecked ? 'checked' : ''}">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="20 6 9 17 4 12"></polyline>
+          </svg>
+        </div>
+        ${favicon
+        ? `<img class="tab-favicon" src="${escapeHtml(favicon)}" onerror="this.outerHTML='<div class=\\'tab-favicon-fallback\\'><svg viewBox=\\'0 0 24 24\\' fill=\\'none\\' stroke=\\'currentColor\\' stroke-width=\\'2\\'><circle cx=\\'12\\' cy=\\'12\\' r=\\'10\\'/><line x1=\\'2\\' y1=\\'12\\' x2=\\'22\\' y2=\\'12\\'/></svg></div>'"/>`
+        : `<div class="tab-favicon-fallback"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/></svg></div>`
+      }
         <div class="tab-info">
           <div class="tab-title">${escapeHtml(t.title || t.url)}</div>
           <div class="tab-url-sub">${escapeHtml(t.url)}</div>
@@ -546,10 +587,16 @@ if (toggleIconHeader) {
   });
 }
 
-// Typing detection & auto-drafting
+// Typing & focus/blur detection & auto-drafting
 ['#input-name', '#input-urls'].forEach(sel => {
   const el = $(sel);
   if (el) {
+    el.addEventListener('focus', () => {
+      sm.transition(MASCOT_STATES.EXCITED);
+    });
+    el.addEventListener('blur', () => {
+      sm.onUserStoppedTyping();
+    });
     el.addEventListener('input', () => {
       saveDraft();
       sm.onUserTyping();
@@ -559,6 +606,12 @@ if (toggleIconHeader) {
   }
 });
 
+// Delete modal button listeners
+const btnDeleteCancel = $('#btn-delete-cancel');
+const btnDeleteConfirm = $('#btn-delete-confirm');
+if (btnDeleteCancel) btnDeleteCancel.addEventListener('click', closeDeleteConfirmModal);
+if (btnDeleteConfirm) btnDeleteConfirm.addEventListener('click', confirmDeleteCollection);
+
 // Close overlay on backdrop click
 $('#form-overlay').addEventListener('click', (e) => {
   if (e.target === e.currentTarget) closeForm();
@@ -566,11 +619,19 @@ $('#form-overlay').addEventListener('click', (e) => {
 $('#tab-picker-overlay').addEventListener('click', (e) => {
   if (e.target === e.currentTarget) closeTabPicker();
 });
+const deleteOverlay = $('#delete-confirm-overlay');
+if (deleteOverlay) {
+  deleteOverlay.addEventListener('click', (e) => {
+    if (e.target === e.currentTarget) closeDeleteConfirmModal();
+  });
+}
 
 // Keyboard shortcuts
 document.addEventListener('keydown', (e) => {
   if (e.key === 'Escape') {
-    if ($('#tab-picker-overlay').style.display !== 'none') {
+    if ($('#delete-confirm-overlay') && $('#delete-confirm-overlay').style.display !== 'none') {
+      closeDeleteConfirmModal();
+    } else if ($('#tab-picker-overlay').style.display !== 'none') {
       closeTabPicker();
     } else {
       closeForm();
@@ -588,10 +649,44 @@ function escapeHtml(str) {
   return div.innerHTML;
 }
 
+// ─── Intro Splash Animation ──────────────────────────────────────────
+async function playIntroSplash() {
+  const splashOverlay = $('#intro-splash');
+  const splashMascot = $('#splash-mascot-svg');
+  const splashMascotWrap = $('#splash-mascot-wrap');
+  const splashTitle = $('#splash-title');
+
+  if (!splashOverlay || !splashMascot) return;
+
+  // Single static mascot state (excited) with subtle entrance pulse
+  splashMascot.setAttribute('data', '../assets/mascot/animations/excited.svg');
+  if (splashMascotWrap) {
+    splashMascotWrap.classList.add('pulse');
+  }
+
+  await new Promise(r => setTimeout(r, 200));
+
+  // Pop in the word "Bundle"
+  if (splashTitle) {
+    splashTitle.classList.add('pop-in');
+  }
+
+  // Hold the full Mascot + "Bundle" splash state for 2 seconds (2000ms)
+  await new Promise(r => setTimeout(r, 1200));
+
+  // CRT TV Power-Off collapse effect
+  splashOverlay.classList.add('tv-off');
+
+  await new Promise(r => setTimeout(r, 1000));
+
+  splashOverlay.style.display = 'none';
+}
+
 // ─── Boot ────────────────────────────────────────────────────────────
 (async () => {
   await loadSvgSprite();
   await loadCollections();
   renderCollections();
   await restoreDraft();
+  await playIntroSplash();
 })();
