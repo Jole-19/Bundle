@@ -14,7 +14,7 @@
 
 ---
 
-## ⚡ What is Bundle?
+##  What is Bundle?
 
 **Bundle** is a sleek, executive Chrome extension designed to streamline your daily tabs and search routines into single-click workflows. 
 
@@ -24,19 +24,19 @@ Everything is fully user-configurable, wrapped in an executive dark theme with l
 
 ---
 
-## 🛠️ Key Features
+##  Key Features
 
-- **🚀 One-Click Collection Launching**: Instantly launch dozens of tabs and web searches in a single click.
-- **🔍 Smart Search Query Fallbacks**: Type plain search terms (e.g. `shadcn ui components` or `quantum physics tutorial`) alongside standard URLs, and Bundle automatically converts them into Google searches.
-- **🤖 Reactive Mascot Engine**: Powered by 9 dynamic SVG mascot states (`idle`, `attentive`, `thinking`, `excited`, `curious`, `sad`, `sleepy`, `error-alert`, `typing-wink`) that react to hovers, tab launches, form inputs, and errors.
-- **📺 Retro CRT Intro Splash**: Enjoy a snappy CRT TV power-off boot animation upon launching the extension.
-- **🗂️ Full Vertical Stretch Tab Picker**: Effortlessly capture open browser tabs into any collection, complete with custom monogram/protocol badges for sites missing native favicons.
-- **🗑️ Interactive Delete Confirmation Modal**: Custom executive confirmation card featuring an expressive sad mascot reaction to prevent accidental deletion.
-- **💾 Automatic Form Draft Recovery**: Never lose unsaved work—form progress is automatically preserved across popups.
+- ** One-Click Collection Launching**: Instantly launch dozens of tabs and web searches in a single click.
+- ** Smart Search Query Fallbacks**: Type plain search terms (e.g. `shadcn ui components` or `quantum physics tutorial`) alongside standard URLs, and Bundle automatically converts them into Google searches.
+- ** Reactive Mascot Engine**: Powered by 9 dynamic SVG mascot states (`idle`, `attentive`, `thinking`, `excited`, `curious`, `sad`, `sleepy`, `error-alert`, `typing-wink`) that react to hovers, tab launches, form inputs, and errors.
+- ** Retro CRT Intro Splash**: Enjoy a snappy CRT TV power-off boot animation upon launching the extension.
+- ** Full Vertical Stretch Tab Picker**: Effortlessly capture open browser tabs into any collection, complete with custom monogram/protocol badges for sites missing native favicons.
+- ** Interactive Delete Confirmation Modal**: Custom executive confirmation card featuring an expressive sad mascot reaction to prevent accidental deletion.
+- ** Automatic Form Draft Recovery**: Never lose unsaved work—form progress is automatically preserved across popups.
 
 ---
 
-## 🖼️ Screenshots & Demo
+##  Screenshots & Demo
 
 > *Add your application screenshots or demo GIFs to the `assets/demo/` folder and update the paths below:*
 
@@ -54,7 +54,7 @@ Everything is fully user-configurable, wrapped in an executive dark theme with l
 
 ---
 
-## 📥 Installation (Load Unpacked)
+##  Installation (Load Unpacked)
 
 Until **Bundle** is published to the Chrome Web Store, you can easily run it locally in Developer Mode:
 
@@ -70,7 +70,7 @@ Until **Bundle** is published to the Chrome Web Store, you can easily run it loc
 
 ---
 
-## 💻 Tech Stack
+##  Tech Stack
 
 - **Extension Framework**: Chrome Extension Manifest V3 (Service Worker `background.js` + `chrome.storage.local`)
 - **Frontend Logic**: Vanilla JavaScript (ES6+ modular state machine & DOM controller)
@@ -79,7 +79,7 @@ Until **Bundle** is published to the Chrome Web Store, you can easily run it loc
 
 ---
 
-## 🤝 Contributing
+##  Contributing
 
 Contributions, bug reports, and feature suggestions are warmly welcomed! Since **Bundle** is an open-source indie project:
 
@@ -91,7 +91,7 @@ Contributions, bug reports, and feature suggestions are warmly welcomed! Since *
 
 ---
 
-## 📄 License
+##  License
 
 Distributed under the **MIT License**. See `LICENSE` for more information.
 
