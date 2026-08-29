@@ -6,6 +6,18 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
     openCollection(msg).then((result) => sendResponse(result));
     return true; // keep the message channel open for async response
   }
+  if (msg.type === 'GET_ACTIVE_GROUPS') {
+    getActiveGroups().then((result) => sendResponse(result));
+    return true;
+  }
+  if (msg.type === 'TOGGLE_GROUP_COLLAPSE') {
+    toggleGroupCollapse(msg.title, msg.groupId).then((result) => sendResponse(result));
+    return true;
+  }
+  if (msg.type === 'CLOSE_GROUP') {
+    closeGroup(msg.title, msg.groupId).then((result) => sendResponse(result));
+    return true;
+  }
 });
 
 async function openCollection({ urls = [], title = '', color = 'blue' }) {
@@ -77,4 +89,67 @@ async function openCollection({ urls = [], title = '', color = 'blue' }) {
   }
 
   return results;
+}
+
+async function getActiveGroups() {
+  try {
+    if (!chrome.tabGroups || !chrome.tabGroups.query) return {};
+    const groups = await chrome.tabGroups.query({});
+    const result = {};
+    for (const g of groups) {
+      if (g.title) {
+        const trimmed = g.title.trim();
+        const obj = { id: g.id, collapsed: g.collapsed, color: g.color };
+        result[trimmed] = obj;
+        result[trimmed.toLowerCase()] = obj;
+      }
+    }
+    return result;
+  } catch (err) {
+    console.warn('Failed to query active tab groups:', err);
+    return {};
+  }
+}
+
+async function toggleGroupCollapse(title, groupId) {
+  try {
+    if (!chrome.tabGroups) return { success: false };
+    let id = groupId;
+    if (!id && title && chrome.tabGroups.query) {
+      const groups = await chrome.tabGroups.query({});
+      const match = groups.find(g => g.title && g.title.trim().toLowerCase() === title.trim().toLowerCase());
+      if (match) id = match.id;
+    }
+    if (!id) return { success: false };
+    const group = await chrome.tabGroups.get(id);
+    const newCollapsedState = !group.collapsed;
+    await chrome.tabGroups.update(id, { collapsed: newCollapsedState });
+    return { success: true, groupId: id, collapsed: newCollapsedState };
+  } catch (err) {
+    console.error('Failed to toggle group collapse:', err);
+    return { success: false, error: err.message };
+  }
+}
+
+async function closeGroup(title, groupId) {
+  try {
+    let id = groupId;
+    if (!id && title && chrome.tabGroups && chrome.tabGroups.query) {
+      const groups = await chrome.tabGroups.query({});
+      const match = groups.find(g => g.title && g.title.trim().toLowerCase() === title.trim().toLowerCase());
+      if (match) id = match.id;
+    }
+    if (!id) return { success: false };
+    if (chrome.tabs && chrome.tabs.query) {
+      const tabs = await chrome.tabs.query({ groupId: id });
+      const tabIds = tabs.map(t => t.id).filter(Boolean);
+      if (tabIds.length > 0) {
+        await chrome.tabs.remove(tabIds);
+      }
+    }
+    return { success: true };
+  } catch (err) {
+    console.error('Failed to close tab group:', err);
+    return { success: false, error: err.message };
+  }
 }

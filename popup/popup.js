@@ -37,10 +37,22 @@ const EMOJI_FALLBACK_MAP = {
 
 // ─── State ───────────────────────────────────────────────────────────
 let collections = [];
+let activeGroups = {};
 let editingId = null;
 let typingTimer = null;
 
 const $ = (sel) => document.querySelector(sel);
+
+async function refreshActiveGroups() {
+  try {
+    if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.sendMessage) {
+      activeGroups = await chrome.runtime.sendMessage({ type: 'GET_ACTIVE_GROUPS' }) || {};
+    }
+  } catch (err) {
+    console.warn('Failed to refresh active groups:', err);
+    activeGroups = {};
+  }
+}
 
 // ─── State Machine ───────────────────────────────────────────────────
 const mascotEl = $('#mascot-svg');
@@ -268,28 +280,56 @@ function renderCollections() {
   empty.style.display = 'none';
   sm.onPopupOpen(true);
 
-  list.innerHTML = collections.map((c, i) => `
-    <div class="collection-card" data-index="${i}">
-      <div class="collection-icon">
-        <svg viewBox="0 0 24 24"><use href="#icon-${getValidIcon(c)}"></use></svg>
-      </div>
-      <div class="collection-info">
-        <div class="collection-name">${escapeHtml(c.name)}</div>
-        <div class="collection-count">
-          <span class="collection-color-pill ${escapeHtml(c.color || 'blue')}"></span>
-          ${c.urls.length} item${c.urls.length !== 1 ? 's' : ''}
+  list.innerHTML = collections.map((c, i) => {
+    const key = c.name ? c.name.trim() : '';
+    const groupInfo = activeGroups[key] || activeGroups[key.toLowerCase()];
+    const isGroupActive = !!groupInfo;
+    const isCollapsed = groupInfo ? groupInfo.collapsed : false;
+
+    const statusBadge = isGroupActive
+      ? `<span class="collection-status-tag ${isCollapsed ? 'collapsed' : ''}"><span class="status-dot"></span>${isCollapsed ? 'Collapsed' : 'Open'}</span>`
+      : '';
+
+    const toggleButton = isGroupActive
+      ? `<button class="btn-action toggle-group" title="${isCollapsed ? 'Expand tab group' : 'Collapse tab group'}" data-index="${i}" data-group-id="${groupInfo.id}">
+           <svg viewBox="0 0 24 24"><use href="#icon-${isCollapsed ? 'chevron-up' : 'chevron-down'}"></use></svg>
+         </button>`
+      : '';
+
+    const closeButton = isGroupActive
+      ? `<button class="btn-action close-group" title="Close active tab group" data-index="${i}" data-group-id="${groupInfo.id}">
+           <svg viewBox="0 0 24 24"><use href="#icon-close-group"></use></svg>
+         </button>`
+      : '';
+
+    return `
+      <div class="collection-card ${isGroupActive ? 'has-active-group' : ''}" data-index="${i}">
+        <div class="collection-icon">
+          <svg viewBox="0 0 24 24"><use href="#icon-${getValidIcon(c)}"></use></svg>
+        </div>
+        <div class="collection-info">
+          <div class="collection-name">
+            ${escapeHtml(c.name)}
+            ${statusBadge}
+          </div>
+          <div class="collection-count">
+            <span class="collection-color-pill ${escapeHtml(c.color || 'blue')}"></span>
+            ${c.urls.length} item${c.urls.length !== 1 ? 's' : ''}
+          </div>
+        </div>
+        <div class="collection-actions">
+          ${toggleButton}
+          ${closeButton}
+          <button class="btn-action edit" title="Edit" data-index="${i}">
+            <svg viewBox="0 0 24 24"><use href="#icon-edit"></use></svg>
+          </button>
+          <button class="btn-action delete" title="Delete" data-index="${i}">
+            <svg viewBox="0 0 24 24"><use href="#icon-trash"></use></svg>
+          </button>
         </div>
       </div>
-      <div class="collection-actions">
-        <button class="btn-action edit" title="Edit" data-index="${i}">
-          <svg viewBox="0 0 24 24"><use href="#icon-edit"></use></svg>
-        </button>
-        <button class="btn-action delete" title="Delete" data-index="${i}">
-          <svg viewBox="0 0 24 24"><use href="#icon-trash"></use></svg>
-        </button>
-      </div>
-    </div>
-  `).join('');
+    `;
+  }).join('');
 
   // Bind events
   list.querySelectorAll('.collection-card').forEach(card => {
@@ -301,6 +341,43 @@ function renderCollections() {
     card.addEventListener('click', (e) => {
       if (e.target.closest('.btn-action')) return;
       openCollection(idx, card);
+    });
+  });
+
+  list.querySelectorAll('.btn-action.toggle-group').forEach(btn => {
+    btn.addEventListener('click', async (e) => {
+      e.stopPropagation();
+      const idx = parseInt(btn.dataset.index);
+      const col = collections[idx];
+      if (col && typeof chrome !== 'undefined' && chrome.runtime) {
+        const groupId = parseInt(btn.dataset.groupId) || undefined;
+        await chrome.runtime.sendMessage({
+          type: 'TOGGLE_GROUP_COLLAPSE',
+          title: col.name,
+          groupId
+        });
+        await refreshActiveGroups();
+        renderCollections();
+      }
+    });
+  });
+
+  list.querySelectorAll('.btn-action.close-group').forEach(btn => {
+    btn.addEventListener('click', async (e) => {
+      e.stopPropagation();
+      const idx = parseInt(btn.dataset.index);
+      const col = collections[idx];
+      if (col && typeof chrome !== 'undefined' && chrome.runtime) {
+        const groupId = parseInt(btn.dataset.groupId) || undefined;
+        await chrome.runtime.sendMessage({
+          type: 'CLOSE_GROUP',
+          title: col.name,
+          groupId
+        });
+        sm.onCollectionDeleted();
+        await refreshActiveGroups();
+        renderCollections();
+      }
     });
   });
 
@@ -340,6 +417,8 @@ async function openCollection(index, cardEl) {
       } else {
         sm.onTabsOpened();
       }
+      await refreshActiveGroups();
+      renderCollections();
     } else {
       // Local dev fallback
       col.urls.forEach(url => {
@@ -752,6 +831,7 @@ async function playIntroSplash() {
 (async () => {
   await loadSvgSprite();
   await loadCollections();
+  await refreshActiveGroups();
   renderCollections();
   await restoreDraft();
   await playIntroSplash();
