@@ -14,6 +14,8 @@ const AVAILABLE_ICONS = [
   'bag', 'gamepad', 'coffee', 'link'
 ];
 
+const TAB_GROUP_COLORS = ['grey', 'blue', 'red', 'yellow', 'green', 'pink', 'purple', 'cyan', 'orange'];
+
 const EMOJI_FALLBACK_MAP = {
   '📦': 'package',
   '🎨': 'palette',
@@ -58,6 +60,22 @@ async function loadCollections() {
   } catch {
     collections = JSON.parse(localStorage.getItem('bundle_collections') || '[]');
   }
+
+  // Assign distinct default colors to collections if missing or duplicated
+  let updated = false;
+  const usedColors = new Set();
+  collections.forEach((col) => {
+    if (!col.color || usedColors.has(col.color)) {
+      const available = TAB_GROUP_COLORS.find(c => !usedColors.has(c)) || TAB_GROUP_COLORS[usedColors.size % TAB_GROUP_COLORS.length];
+      col.color = available;
+      updated = true;
+    }
+    usedColors.add(col.color);
+  });
+
+  if (updated) {
+    saveCollections();
+  }
 }
 
 async function saveCollections() {
@@ -80,6 +98,7 @@ async function saveDraft() {
       isOpen: true,
       editingId,
       name: $('#input-name').value,
+      color: $('#input-color')?.value || 'blue',
       icon: $('#input-icon').value || 'package',
       urls: $('#input-urls').value
     };
@@ -122,6 +141,7 @@ async function restoreDraft() {
       $('#form-title').textContent = editingId !== null ? 'Edit Collection' : 'New Collection (Draft Restored)';
       $('#input-name').value = draft.name || '';
       $('#input-urls').value = draft.urls || '';
+      renderColorPicker(draft.color || 'blue');
       renderIconPicker(draft.icon || 'package');
       $('#form-overlay').style.display = '';
       sm.onFormOpen();
@@ -141,6 +161,44 @@ async function loadSvgSprite() {
   } catch (err) {
     console.error('Failed to load SVG sprite:', err);
   }
+}
+
+// ─── Color Helpers ───────────────────────────────────────────────────
+function getNextAvailableColor() {
+  const usedColors = collections.map(c => c.color).filter(Boolean);
+  const unused = TAB_GROUP_COLORS.find(c => !usedColors.includes(c));
+  if (unused) return unused;
+  return TAB_GROUP_COLORS[collections.length % TAB_GROUP_COLORS.length];
+}
+
+function renderColorPicker(selectedColor = 'blue') {
+  const container = $('#color-picker');
+  const hiddenInput = $('#input-color');
+  const badgeLabel = $('#selected-color-name');
+  if (!container || !hiddenInput) return;
+
+  const validColor = TAB_GROUP_COLORS.includes(selectedColor) ? selectedColor : getNextAvailableColor();
+  hiddenInput.value = validColor;
+  if (badgeLabel) badgeLabel.textContent = validColor;
+
+  container.innerHTML = TAB_GROUP_COLORS.map(c => `
+    <button type="button" class="color-swatch-option ${c === validColor ? 'selected' : ''}" data-color="${c}" title="${c}"></button>
+  `).join('');
+
+  container.querySelectorAll('.color-swatch-option').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.preventDefault();
+      container.querySelectorAll('.color-swatch-option').forEach(b => b.classList.remove('selected'));
+      btn.classList.add('selected');
+      const chosenColor = btn.dataset.color;
+      hiddenInput.value = chosenColor;
+      if (badgeLabel) badgeLabel.textContent = chosenColor;
+      saveDraft();
+      sm.onUserTyping();
+      clearTimeout(typingTimer);
+      typingTimer = setTimeout(() => sm.onUserStoppedTyping(), 1000);
+    });
+  });
 }
 
 // ─── Icon Helpers ────────────────────────────────────────────────────
@@ -217,7 +275,10 @@ function renderCollections() {
       </div>
       <div class="collection-info">
         <div class="collection-name">${escapeHtml(c.name)}</div>
-        <div class="collection-count">${c.urls.length} item${c.urls.length !== 1 ? 's' : ''}</div>
+        <div class="collection-count">
+          <span class="collection-color-pill ${escapeHtml(c.color || 'blue')}"></span>
+          ${c.urls.length} item${c.urls.length !== 1 ? 's' : ''}
+        </div>
       </div>
       <div class="collection-actions">
         <button class="btn-action edit" title="Edit" data-index="${i}">
@@ -271,6 +332,8 @@ async function openCollection(index, cardEl) {
       const result = await chrome.runtime.sendMessage({
         type: 'OPEN_COLLECTION',
         urls: col.urls,
+        title: col.name,
+        color: col.color || 'blue'
       });
       if (result && result.failed > 0) {
         sm.onTabsError();
@@ -342,6 +405,7 @@ function openNewForm() {
   $('#form-title').textContent = 'New Collection';
   $('#input-name').value = '';
   $('#input-urls').value = '';
+  renderColorPicker(getNextAvailableColor());
   renderIconPicker('package');
   collapseIconPicker();
   $('#form-overlay').style.display = '';
@@ -356,6 +420,7 @@ function openEditForm(index) {
   $('#form-title').textContent = 'Edit Collection';
   $('#input-name').value = col.name;
   $('#input-urls').value = col.urls.join('\n');
+  renderColorPicker(col.color || 'blue');
   renderIconPicker(getValidIcon(col));
   collapseIconPicker();
   $('#form-overlay').style.display = '';
@@ -374,6 +439,7 @@ async function closeForm() {
 
 async function saveForm() {
   const name = $('#input-name').value.trim();
+  const color = $('#input-color')?.value || 'blue';
   const icon = $('#input-icon').value || 'package';
   const urlsRaw = $('#input-urls').value.trim();
 
@@ -391,7 +457,7 @@ async function saveForm() {
     return;
   }
 
-  const entry = { name, icon, urls, id: Date.now().toString(36) };
+  const entry = { name, color, icon, urls, id: Date.now().toString(36) };
 
   if (editingId !== null) {
     entry.id = collections[editingId].id || entry.id;

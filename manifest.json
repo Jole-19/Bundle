@@ -3,7 +3,7 @@
   "name": "Bundle",
   "version": "1.0.0",
   "description": "One click opens your curated collection of tabs and searches. Powered by a reactive mascot.",
-  "permissions": ["tabs", "storage"],
+  "permissions": ["tabs", "storage", "tabGroups"],
   "action": {
     "default_popup": "popup/popup.html",
     "default_icon": {

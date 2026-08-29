@@ -482,6 +482,87 @@ textarea::-webkit-scrollbar-thumb:hover {
   box-shadow: none;
 }
 
+/* ─── Tab Group Color Picker & Collection Badges ─── */
+.color-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 6px;
+}
+
+.color-name-badge {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 2px 8px;
+  background: #1A1A1A;
+  border: 1px solid rgba(246, 198, 103, 0.3);
+  border-radius: 6px;
+  color: #F6C667;
+}
+
+.color-picker-grid {
+  display: grid;
+  grid-template-columns: repeat(9, 1fr);
+  gap: 6px;
+  padding: 8px;
+  background: #1A1A1A;
+  border: 1px solid rgba(246, 198, 103, 0.25);
+  border-radius: var(--radius-sm);
+}
+
+.color-swatch-option {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  cursor: pointer;
+  transition: all var(--transition);
+  position: relative;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+}
+
+.color-swatch-option:hover {
+  transform: scale(1.2);
+  z-index: 5;
+}
+
+.color-swatch-option.selected {
+  border-color: #FEF5D9;
+  box-shadow: 0 0 0 2px #8E1616, 0 2px 8px rgba(0, 0, 0, 0.5);
+  transform: scale(1.15);
+}
+
+.color-swatch-option[data-color="grey"] { background: #8e8e93; }
+.color-swatch-option[data-color="blue"] { background: #007aff; }
+.color-swatch-option[data-color="red"] { background: #ff3b30; }
+.color-swatch-option[data-color="yellow"] { background: #ffcc00; }
+.color-swatch-option[data-color="green"] { background: #34c759; }
+.color-swatch-option[data-color="pink"] { background: #ff2d55; }
+.color-swatch-option[data-color="purple"] { background: #af52de; }
+.color-swatch-option[data-color="cyan"] { background: #55bef0; }
+.color-swatch-option[data-color="orange"] { background: #ff9500; }
+
+.collection-color-pill {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  display: inline-block;
+  box-shadow: 0 0 4px rgba(0, 0, 0, 0.4);
+  flex-shrink: 0;
+}
+
+.collection-color-pill.grey { background: #8e8e93; }
+.collection-color-pill.blue { background: #007aff; }
+.collection-color-pill.red { background: #ff3b30; }
+.collection-color-pill.yellow { background: #ffcc00; }
+.collection-color-pill.green { background: #34c759; }
+.collection-color-pill.pink { background: #ff2d55; }
+.collection-color-pill.purple { background: #af52de; }
+.collection-color-pill.cyan { background: #55bef0; }
+.collection-color-pill.orange { background: #ff9500; }
+
 /* ─── Collapsible Icon Section ─── */
 .icon-header-row {
   display: flex;
